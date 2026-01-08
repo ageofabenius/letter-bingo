@@ -1,3 +1,5 @@
+import { LetterRandomizer as LetterBag } from "./letter_bag.svelte";
+
 export class Game {
 
     grid: (string | null)[][] = $state([
@@ -10,14 +12,17 @@ export class Game {
 
     current_letter: string = $state('');
 
+    letter_bag: LetterBag
+
     constructor() {
-        this.advance_letter()
+        this.letter_bag = new LetterBag()
+        this.next_letter()
     }
 
-    advance_letter() {
-        this.current_letter = test_letters.shift()!;
+    next_letter() {
+        console.log('advance_letter')
+        this.current_letter = this.letter_bag.get_next_letter()
     }
-
 
     cell_clicked(row_index: number, col_index: number) {
         // Validate that cell is empty
@@ -32,40 +37,6 @@ export class Game {
         // Check win condition
 
         // Move to next letter
-        this.advance_letter()
+        this.next_letter()
     }
 }
-
-
-let test_letters = [
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'a',
-    'b',
-    'c',
-    'd',
-    'e'
-];
