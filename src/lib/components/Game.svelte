@@ -6,7 +6,7 @@
 	let game = new Game(WordleWordList.split('\n'));
 </script>
 
-<div class="grid grid-cols-2 bg-white">
+<div class="grid xl:grid-cols-2 bg-white">
 	<div class="flex flex-col gap-4 p-4">
 		<div class="size-24">
 			<Letter letter={game.current_letter} bordered={true} />
@@ -43,7 +43,7 @@
 	<div class="flex flex-col gap-1 p-4">
 		{#key game.letter_bag.bag}
 			{#each Object.entries(game.letter_bag.bag) as [letter, count]}
-				<div class="flex gap-1">
+				<div class="flex gap-1 flex-wrap">
 					{#each { length: count }}
 						<div class="size-12">
 							<Letter {letter} bordered={true} />
