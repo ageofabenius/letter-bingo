@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Grid from '$lib/components/Grid.svelte';
+	import Game from '$lib/components/Game.svelte';
 </script>
 
-<div class="flex flex-col gap-10 px-[30%] py-10">
-	<Grid />
+<div class="p-10 bg-slate-100">
+	<Game />
 </div>

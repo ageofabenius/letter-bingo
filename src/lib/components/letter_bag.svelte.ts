@@ -33,14 +33,14 @@ export class LetterRandomizer {
     // random_seed = 1234
 
     constructor() {
-        this.bag = { ...this.initial_letter_distribution }
+        this.bag = $state({ ...this.initial_letter_distribution })
         console.log('initialized letter bag', this.bag)
     }
 
     get_next_letter(): string {
         const bag_flattened = Object.entries(this.bag).flatMap(([letter, count]) => Array(count).fill(letter));
         const letter = bag_flattened[Math.floor(Math.random() * bag_flattened.length)]
-        this.bag[letter] -= 1
+        this.bag[letter] = this.bag[letter] - 1
         return letter
     }
 }
