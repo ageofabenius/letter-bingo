@@ -4,22 +4,26 @@
 	import Letter from './Letter.svelte';
 
 	let game = new Game(WordleWordList.split('\n'));
+
+	let grid_width = $state(0);
+	let grid_letter_size = $derived((grid_width - 4 * 0.125) / 5);
 </script>
 
-<div class="grid xl:grid-cols-2 bg-white">
+<div class="grid size-full bg-white xl:grid-cols-2">
 	<div class="flex flex-col gap-4 p-4">
-		<div class="size-24">
+		<div style:width={`${grid_letter_size}px`} style:height={`${grid_letter_size}px`}>
 			<Letter letter={game.current_letter} bordered={true} />
 		</div>
 
 		<div
 			class="
-			grid aspect-square w-fit
+			grid aspect-square
 			grid-cols-5 grid-rows-5
 			gap-0.5
 		bg-gray-200
 			p-0.5
 			"
+			bind:clientWidth={grid_width}
 		>
 			{#each game.grid as row, row_index}
 				{#each row as letter, col_index}
@@ -27,7 +31,7 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div
 						class="
-						size-24
+						size-full
 						{letter ? 'hover:bg-gray-100' : 'cursor-pointer hover:bg-green-100'}
 						{game.winning_row === row_index || game.winning_col === col_index ? 'bg-green-500/50' : 'bg-white'}
 						"
@@ -40,12 +44,12 @@
 		</div>
 	</div>
 
-	<div class="flex flex-col gap-1 p-4">
+	<div class="flex flex-col gap-4 p-4">
 		{#key game.letter_bag.bag}
 			{#each Object.entries(game.letter_bag.bag) as [letter, count]}
-				<div class="flex gap-1 flex-wrap">
+				<div class="flex flex-wrap gap-1">
 					{#each { length: count }}
-						<div class="size-12">
+						<div style:width={`${grid_letter_size}px`} style:height={`${grid_letter_size}px`}>
 							<Letter {letter} bordered={true} />
 						</div>
 					{/each}
