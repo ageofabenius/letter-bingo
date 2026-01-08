@@ -16,6 +16,9 @@ export class Game {
     letter_bag: LetterBag
     dictionary: WordList
 
+    winning_row: number | null = $state(null)
+    winning_col: number | null = $state(null)
+
     constructor(word_list: string[]) {
         this.dictionary = new WordList(word_list)
 
@@ -29,6 +32,11 @@ export class Game {
     }
 
     cell_clicked(row_index: number, col_index: number) {
+        // Validate game is not over
+        if (this.winning_row || this.winning_col) {
+            return;
+        }
+
         // Validate that cell is empty
         if (this.grid[row_index][col_index] !== null) {
             return;
@@ -44,20 +52,17 @@ export class Game {
         const col_word = this.col_word(col_index)
         console.log('col_word', col_word)
 
-        let row_wins = false
-        let col_wins = false
-
         if (row_word && this.dictionary.is_valid(row_word)) {
             console.log('ROW WINS!')
-            row_wins = true
+            this.winning_row = row_index
         }
 
         if (col_word && this.dictionary.is_valid(col_word)) {
             console.log('COL WINS!')
-            col_wins = true
+            this.winning_col = col_index
         }
 
-        if (row_wins && col_wins) {
+        if (this.winning_row && this.winning_col) {
             console.log('DOUBLE WIN!')
         }
 

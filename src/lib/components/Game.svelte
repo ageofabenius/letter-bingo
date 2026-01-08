@@ -28,9 +28,9 @@
 					<div
 						class="
 						size-24
-					bg-white
-					{letter ? 'hover:bg-gray-100' : 'cursor-pointer hover:bg-green-100'}
-					"
+						{letter ? 'hover:bg-gray-100' : 'cursor-pointer hover:bg-green-100'}
+						{game.winning_row === row_index || game.winning_col === col_index ? 'bg-green-500/50' : 'bg-white'}
+						"
 						onclick={() => game.cell_clicked(row_index, col_index)}
 					>
 						<Letter {letter} />
@@ -54,3 +54,5 @@
 		{/key}
 	</div>
 </div>
+
+<!-- {letter ? 'hover:bg-gray-100' : 'cursor-pointer hover:bg-green-100'} -->
