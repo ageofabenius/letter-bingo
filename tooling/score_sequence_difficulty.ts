@@ -1,5 +1,14 @@
 import fs from 'fs';
 
+function fast_count_bigint_ones(n: bigint) {
+    let count = 0n;
+    while (n > 0n) {
+        n &= n - 1n;  // clear the lowest set bit
+        count++;
+    }
+    return Number(count);
+}
+
 class GameBoard {
     board: (string | null)[][] = [
         [null, null, null, null, null],
@@ -9,8 +18,8 @@ class GameBoard {
         [null, null, null, null, null]
     ]
 
-    possible_row_matches: number[] = [0, 0, 0, 0, 0]
-    possible_col_matches: number[] = [0, 0, 0, 0, 0]
+    possible_row_matches: number[] = [1, 1, 1, 1, 1] // Default to 1 as a non-zero placeholder for now
+    possible_col_matches: number[] = [1, 1, 1, 1, 1] // Default to 1 as a non-zero placeholder for now
 
     get(row: number, col: number): (string | null) {
         return this.board[row][col]
@@ -164,12 +173,7 @@ function number_of_matches(letters: (string | null)[], word_masks: WordMasks, al
         candidates &= word_masks[index][letter]
     }
 
-    // FOR NOW JUST RETURN 0 OR 1
-    if (candidates === 0n) {
-        return 0
-    } else {
-        return 1
-    }
+    return fast_count_bigint_ones(candidates)
 }
 
 function load_sequence(sequence_filepath: string): string {
@@ -268,14 +272,24 @@ function factorial(n: number) {
     return result;
 }
 
-function game_is_still_winnable(game_board: GameBoard, match_checker: MatchChecker): boolean {
+function game_is_still_winnable(game_board: GameBoard): boolean {
     for (let i = 0; i < 5; i++) {
-        const num_row_matches = match_checker.memoized_number_of_matches(game_board.get_row(i))
-        if (num_row_matches > 0) {
+        if (game_board.possible_row_matches[i] > 0) {
             return true
         }
-        const num_col_matches = match_checker.memoized_number_of_matches(game_board.get_col(i))
-        if (num_col_matches > 0) {
+        if (game_board.possible_col_matches[i] > 0) {
+            return true
+        }
+    }
+    return false
+}
+
+function game_is_still_winnable_in_other_rows_cols(game_board: GameBoard, row: number, col: number): boolean {
+    for (let i = 0; i < 5; i++) {
+        if (i != row && game_board.possible_row_matches[i] > 0) {
+            return true
+        }
+        if (i != col && game_board.possible_col_matches[i] > 0) {
             return true
         }
     }
@@ -302,13 +316,15 @@ function recursive_foo(game_board: GameBoard, full_sequence: string, sequence_in
 
             // console.log(game_board)
 
+            const row_letters = game_board.get_row(row)
+            const col_letters = game_board.get_col(col)
+
             // Check if it's solved
             let row_wins = false
             let col_wins = false
             if (game_board.row_is_filled(row)) {
                 // Row is filled
                 // Check if it's in the dictionary
-                const row_letters = game_board.get_row(row)
                 if (dictionary.has(row_letters.join(""))) {
                     row_wins = true
                 }
@@ -316,7 +332,6 @@ function recursive_foo(game_board: GameBoard, full_sequence: string, sequence_in
             if (game_board.col_is_filled(col)) {
                 // Col is filled
                 // Check if it's in the dictionary
-                const col_letters = game_board.get_col(col)
                 if (dictionary.has(col_letters.join(""))) {
                     col_wins = true
                 }
@@ -328,7 +343,17 @@ function recursive_foo(game_board: GameBoard, full_sequence: string, sequence_in
                 stats.pruned_states += factorial(num_empty_cells)
                 stats.winning_boards.push(clone_board(game_board.board))
             } else {
-                const is_winnable = game_is_still_winnable(game_board, match_checker)
+                // Set new row and col num matches
+                const previous_possible_row_matches = game_board.possible_row_matches[row]
+                const previous_possible_col_matches = game_board.possible_col_matches[col]
+
+                const num_row_matches = match_checker.memoized_number_of_matches(row_letters)
+                const num_col_matches = match_checker.memoized_number_of_matches(col_letters)
+
+                game_board.possible_row_matches[row] = num_row_matches
+                game_board.possible_col_matches[col] = num_col_matches
+
+                const is_winnable = game_is_still_winnable(game_board)
 
                 if (is_winnable) {
                     // The game is still winnable
@@ -338,9 +363,13 @@ function recursive_foo(game_board: GameBoard, full_sequence: string, sequence_in
                     const num_empty_cells = 25 - sequence_index - 1
                     stats.pruned_states += factorial(num_empty_cells)
                 }
+
+                // Set the possible matches back, backtracking
+                game_board.possible_row_matches[row] = previous_possible_row_matches
+                game_board.possible_col_matches[col] = previous_possible_col_matches
             }
 
-            // Unset the cell back to null, backtracking prevents high memory usage
+            // Unset the cell back to null, backtracking
             game_board.set(row, col, null)
 
 
