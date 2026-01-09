@@ -1,5 +1,57 @@
 import fs from 'fs';
 
+class GameBoard {
+    board: (string | null)[][] = [
+        [null, null, null, null, null],
+        [null, null, null, null, null],
+        [null, null, null, null, null],
+        [null, null, null, null, null],
+        [null, null, null, null, null]
+    ]
+
+    possible_row_matches: number[] = [0, 0, 0, 0, 0]
+    possible_col_matches: number[] = [0, 0, 0, 0, 0]
+
+    get(row: number, col: number): (string | null) {
+        return this.board[row][col]
+    }
+
+    set(row: number, col: number, letter: string | null) {
+        this.board[row][col] = letter
+    }
+
+
+    get_row(index: number): (string | null)[] {
+        return this.board[index]
+    }
+
+    get_col(index: number): (string | null)[] {
+        return [
+            this.board[0][index],
+            this.board[1][index],
+            this.board[2][index],
+            this.board[3][index],
+            this.board[4][index],
+        ]
+    }
+
+    row_is_filled(index: number): boolean {
+        return this.board[index][0] !== null
+            && this.board[index][1] !== null
+            && this.board[index][2] !== null
+            && this.board[index][3] !== null
+            && this.board[index][4] !== null
+    }
+
+    col_is_filled(index: number): boolean {
+        return this.board[0][index] !== null
+            && this.board[1][index] !== null
+            && this.board[2][index] !== null
+            && this.board[3][index] !== null
+            && this.board[4][index] !== null
+    }
+}
+
 // [index][letter]
 type WordMasks = Record<number, Record<string, bigint>>
 
@@ -63,7 +115,7 @@ class MatchChecker {
     word_masks: WordMasks
     all_words_mask: bigint
 
-    memoized_num_matches: Map<string, number> = new Map()
+    memoized_num_matches: Map<number, number> = new Map()
 
     stats: Stats
 
@@ -74,19 +126,32 @@ class MatchChecker {
     }
 
     memoized_number_of_matches(letters: (string | null)[]): number {
-        const letters_string = letters.join()
-        const memoized = this.memoized_num_matches.get(letters_string)
+        const key = this.memoization_key(letters)
+        const memoized = this.memoized_num_matches.get(key)
         if (memoized !== undefined) {
-            // console.log(`returning memoized: ${letters}`)
+            // console.log(`returning memoized: ${letters}, key: ${key.toString(2)}`)
             this.stats.memoized_matches_returned++
             return memoized
         }
 
         this.stats.unmemoized_matches_returned++
         const num_matches = number_of_matches(letters, this.word_masks, this.all_words_mask)
-        this.memoized_num_matches.set(letters_string, num_matches)
-        // console.log(`memoizing ${letters}`)
+        this.memoized_num_matches.set(key, num_matches)
+        // console.log(`memoizing ${letters}, key: ${key.toString(2)}`)
         return num_matches
+    }
+
+    memoization_key(letters: (string | null)[]): number {
+        /// 27 possible values (26 letters + null) can fit in 5 bytes, so we
+        /// take the value of each letter and shift it over by index * 5 bits
+        let key = 0;
+        for (let i = 0; i < 5; i++) {
+            let value = letters[i] === null ? 0 : letters[i]!.charCodeAt(0) - 96 // so a = 1, null = 0
+
+            key |= value << (i * 5);
+        }
+
+        return key
     }
 }
 
@@ -125,13 +190,7 @@ function main(sequence_filepath: string, dictionary_filepath: string) {
 
     console.log(`Simulating game....`)
 
-    let game_board: (string | null)[][] = [
-        [null, null, null, null, null],
-        [null, null, null, null, null],
-        [null, null, null, null, null],
-        [null, null, null, null, null],
-        [null, null, null, null, null]
-    ]
+    let game_board: GameBoard = new GameBoard()
     let stats = new Stats()
     let match_checker = new MatchChecker(word_masks, all_words_mask, stats)
     recursive_foo(game_board, sequence, 0, 6, dictionary, match_checker, stats)
@@ -139,13 +198,7 @@ function main(sequence_filepath: string, dictionary_filepath: string) {
     stats.print_results()
 }
 
-function get_row(index: number, game_board: (string | null)[][]): (string | null)[] {
-    return game_board[index]
-}
 
-function get_col(index: number, game_board: (string | null)[][]): (string | null)[] {
-    return game_board.map((r) => r[index])
-}
 
 class Stats {
     total_possible_states: number
@@ -215,13 +268,13 @@ function factorial(n: number) {
     return result;
 }
 
-function game_is_still_winnable(game_board: (string | null)[][], match_checker: MatchChecker): boolean {
+function game_is_still_winnable(game_board: GameBoard, match_checker: MatchChecker): boolean {
     for (let i = 0; i < 5; i++) {
-        const num_row_matches = match_checker.memoized_number_of_matches(get_row(i, game_board))
+        const num_row_matches = match_checker.memoized_number_of_matches(game_board.get_row(i))
         if (num_row_matches > 0) {
             return true
         }
-        const num_col_matches = match_checker.memoized_number_of_matches(get_col(i, game_board))
+        const num_col_matches = match_checker.memoized_number_of_matches(game_board.get_col(i))
         if (num_col_matches > 0) {
             return true
         }
@@ -229,7 +282,7 @@ function game_is_still_winnable(game_board: (string | null)[][], match_checker: 
     return false
 }
 
-function recursive_foo(game_board: (string | null)[][], full_sequence: string, sequence_index: number, search_depth: number, dictionary: Set<string>, match_checker: MatchChecker, stats: Stats) {
+function recursive_foo(game_board: GameBoard, full_sequence: string, sequence_index: number, search_depth: number, dictionary: Set<string>, match_checker: MatchChecker, stats: Stats) {
     if (sequence_index >= search_depth) {
         return
     }
@@ -238,14 +291,13 @@ function recursive_foo(game_board: (string | null)[][], full_sequence: string, s
 
     for (let row = 0; row < 5; row += 1) {
         for (let col = 0; col < 5; col += 1) {
-
-            if (game_board[row][col] !== null) {
+            if (game_board.get(row, col) !== null) {
                 // Cell is already taken
                 continue
             }
 
             // Set the cell to the current letter
-            game_board[row][col] = current_letter
+            game_board.set(row, col, current_letter)
             stats.visited_states++
 
             // console.log(game_board)
@@ -253,18 +305,18 @@ function recursive_foo(game_board: (string | null)[][], full_sequence: string, s
             // Check if it's solved
             let row_wins = false
             let col_wins = false
-            const row_letters = get_row(row, game_board)
-            if (!row_letters.some((l) => l === null)) {
+            if (game_board.row_is_filled(row)) {
                 // Row is filled
                 // Check if it's in the dictionary
+                const row_letters = game_board.get_row(row)
                 if (dictionary.has(row_letters.join(""))) {
                     row_wins = true
                 }
             }
-            const col_letters = get_col(col, game_board)
-            if (!col_letters.some((l) => l === null)) {
+            if (game_board.col_is_filled(col)) {
                 // Col is filled
                 // Check if it's in the dictionary
+                const col_letters = game_board.get_col(col)
                 if (dictionary.has(col_letters.join(""))) {
                     col_wins = true
                 }
@@ -274,7 +326,7 @@ function recursive_foo(game_board: (string | null)[][], full_sequence: string, s
                 stats.pruned_branches++
                 const num_empty_cells = 25 - sequence_index - 1
                 stats.pruned_states += factorial(num_empty_cells)
-                stats.winning_boards.push(clone_board(game_board))
+                stats.winning_boards.push(clone_board(game_board.board))
             } else {
                 const is_winnable = game_is_still_winnable(game_board, match_checker)
 
@@ -289,7 +341,7 @@ function recursive_foo(game_board: (string | null)[][], full_sequence: string, s
             }
 
             // Unset the cell back to null, backtracking prevents high memory usage
-            game_board[row][col] = null
+            game_board.set(row, col, null)
 
 
             // Finally, print results if at the first or second layer
