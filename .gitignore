@@ -24,3 +24,7 @@ vite.config.ts.timestamp-*
 
 *storybook.log
 storybook-static
+
+# Node profiling
+isolate-*-v8.log
+profile.json
