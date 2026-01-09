@@ -1,11 +1,12 @@
 import fs from 'fs';
 
-type WordMasks = Record<number, Record<string, Set<string>>>
+// [index][letter]
+type WordMasks = Record<number, Record<string, bigint>>
 
-function dictionary_and_word_masks(dictionary_filepath: string): [Set<string>, WordMasks] {
+function dictionary_and_word_masks(dictionary_filepath: string): [Set<string>, WordMasks, bigint] {
     console.log(`Loading dictionary: ${dictionary_filepath}`)
 
-    let all_words = fs.readFileSync(dictionary_filepath, 'utf8').split('\n')
+    let all_words = fs.readFileSync(dictionary_filepath, 'utf8').trimEnd().split('\n')
 
     let all_words_set = new Set(all_words)
 
@@ -39,32 +40,36 @@ function dictionary_and_word_masks(dictionary_filepath: string): [Set<string>, W
     ]
 
     let word_masks: WordMasks = {}
-
-    // Create sets of all words with [letter] in position [i]
     for (let i = 0; i < 5; i++) {
         word_masks[i] = {}
         for (let letter of letters) {
-            // console.log(`Looking for words where index ${i} === ${letter}`)
-            let matches = all_words.filter((w) => w[i] === letter)
-            // console.log(matches.join(", "))
-            word_masks[i][letter] = new Set(matches)
+            word_masks[i][letter] = 0n
         }
     }
 
-    return [all_words_set, word_masks]
+    for (let [word_index, word] of all_words.entries()) {
+        for (let pos = 0; pos < 5; pos++) {
+            let letter = word[pos]
+            word_masks[pos][letter] |= 1n << BigInt(word_index);
+        }
+    }
+
+    const all_words_mask = (1n << BigInt(all_words.length)) - 1n;
+
+    return [all_words_set, word_masks, all_words_mask]
 }
-
-
 
 class MatchChecker {
     word_masks: WordMasks
+    all_words_mask: bigint
 
     memoized_num_matches: Map<string, number> = new Map()
 
     stats: Stats
 
-    constructor(word_masks: WordMasks, stats: Stats) {
+    constructor(word_masks: WordMasks, all_words_mask: bigint, stats: Stats) {
         this.word_masks = word_masks
+        this.all_words_mask = all_words_mask
         this.stats = stats
     }
 
@@ -78,36 +83,28 @@ class MatchChecker {
         }
 
         this.stats.unmemoized_matches_returned++
-        const num_matches = number_of_matches(letters, this.word_masks)
+        const num_matches = number_of_matches(letters, this.word_masks, this.all_words_mask)
         this.memoized_num_matches.set(letters_string, num_matches)
         // console.log(`memoizing ${letters}`)
         return num_matches
     }
 }
 
-function number_of_matches(letters: (string | null)[], word_masks: WordMasks): number {
-    // Collect all sets
-    let individual_letter_sets = []
+function number_of_matches(letters: (string | null)[], word_masks: WordMasks, all_words_mask: bigint): number {
+    let candidates = all_words_mask
     for (const [index, letter] of letters.entries()) {
         if (letter === null) {
             continue
         }
-        individual_letter_sets.push(word_masks[index][letter])
+        candidates &= word_masks[index][letter]
     }
-    if (individual_letter_sets.length == 0) {
+
+    // FOR NOW JUST RETURN 0 OR 1
+    if (candidates === 0n) {
         return 0
+    } else {
+        return 1
     }
-
-    // The intersection of all sets defines the available matches
-    const matches = individual_letter_sets.slice(1, individual_letter_sets.length).reduce((accumulator, currentSet) => {
-        return set_intersection(accumulator, currentSet);
-    }, individual_letter_sets[0])
-
-    return matches.size
-}
-
-function set_intersection(left: Set<string>, right: Set<string>): Set<string> {
-    return new Set([...left].filter(l => right.has(l)))
 }
 
 function load_sequence(sequence_filepath: string): string {
@@ -121,7 +118,7 @@ function clone_board(board: (string | null)[][]): (string | null)[][] {
 function main(sequence_filepath: string, dictionary_filepath: string) {
     console.log(`Scoring sequence difficulty for: ${sequence_filepath}`)
 
-    let [dictionary, word_masks] = dictionary_and_word_masks(dictionary_filepath)
+    let [dictionary, word_masks, all_words_mask] = dictionary_and_word_masks(dictionary_filepath)
 
     let sequence = load_sequence(sequence_filepath)
     console.log(`Sequence: ${sequence}`)
@@ -136,7 +133,7 @@ function main(sequence_filepath: string, dictionary_filepath: string) {
         [null, null, null, null, null]
     ]
     let stats = new Stats()
-    let match_checker = new MatchChecker(word_masks, stats)
+    let match_checker = new MatchChecker(word_masks, all_words_mask, stats)
     recursive_foo(game_board, sequence, 0, 6, dictionary, match_checker, stats)
     stats.complete()
     stats.print_results()
