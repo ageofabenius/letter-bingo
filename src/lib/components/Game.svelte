@@ -11,8 +11,13 @@
 
 <div class="grid size-full bg-white xl:grid-cols-2">
 	<div class="flex flex-col gap-4 p-4">
-		<div style:width={`${grid_letter_size}px`} style:height={`${grid_letter_size}px`}>
-			<Letter letter={game.current_letter} bordered={true} />
+		<div class="flex gap-4">
+			<div style:width={`${grid_letter_size}px`} style:height={`${grid_letter_size}px`} class="opacity-30">
+				<Letter letter={game.next_letter} bordered={true} />
+			</div>
+			<div style:width={`${grid_letter_size}px`} style:height={`${grid_letter_size}px`}>
+				<Letter letter={game.current_letter} bordered={true} />
+			</div>
 		</div>
 
 		<div
@@ -33,7 +38,7 @@
 						class="
 						size-full
 						{letter ? 'hover:bg-gray-100' : 'cursor-pointer hover:bg-green-100'}
-						{game.winning_row === row_index || game.winning_col === col_index ? 'bg-green-500/50' : 'bg-white'}
+						{game.game_lost ? 'bg-red-500/35' : game.winning_row === row_index || game.winning_col === col_index ? 'bg-green-500/50' : 'bg-white'}
 						"
 						onclick={() => game.cell_clicked(row_index, col_index)}
 					>

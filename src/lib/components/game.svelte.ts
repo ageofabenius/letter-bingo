@@ -12,6 +12,7 @@ export class Game {
     ]);
 
     current_letter: string = $state('');
+    next_letter: string = $state('');
 
     letter_bag: LetterBag
     dictionary: WordList
@@ -19,20 +20,24 @@ export class Game {
     winning_row: number | null = $state(null)
     winning_col: number | null = $state(null)
 
+    game_lost: boolean = $state(false)
+
     constructor(word_list: string[]) {
         this.dictionary = new WordList(word_list)
 
         this.letter_bag = new LetterBag()
-        this.next_letter()
+        this.advance_letter()
+        this.advance_letter()
     }
 
-    next_letter() {
+    advance_letter() {
         console.log('advance_letter')
-        this.current_letter = this.letter_bag.get_next_letter()
+        this.current_letter = this.next_letter
+        this.next_letter = this.letter_bag.get_next_letter()
     }
 
     cell_clicked(row_index: number, col_index: number) {
-        // Validate game is not over
+        // Validate game is not already won
         if (this.winning_row || this.winning_col) {
             return;
         }
@@ -66,8 +71,15 @@ export class Game {
             console.log('DOUBLE WIN!')
         }
 
+        // Validate game is not lost
+        const is_incomplete = this.grid.some((row) => row.some((l) => l === null))
+        if (!is_incomplete) {
+            this.game_lost = true
+            return;
+        }
+
         // Move to next letter
-        this.next_letter()
+        this.advance_letter()
     }
 
     /**
