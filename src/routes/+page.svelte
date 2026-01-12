@@ -2,6 +2,6 @@
 	import Game from '$lib/components/Game.svelte';
 </script>
 
-<div class="p-4 xl:p-10 bg-slate-100">
+<div class="overflow-auto bg-slate-100 p-4 xl:p-10">
 	<Game />
 </div>

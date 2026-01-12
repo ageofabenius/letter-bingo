@@ -3,32 +3,32 @@
 	import WordleWordList from '$lib/content/wordle_all.txt?raw';
 	import Letter from './Letter.svelte';
 
-	let game = new Game(WordleWordList.split('\n'), 2, 40);
+	let game = new Game(WordleWordList.split('\n'), 4, 40);
 </script>
 
 <div class="grid bg-white">
-	<div class="flex flex-col items-start gap-4 p-4">
-		<div class="flex flex-row-reverse gap-4">
+	<div class="flex p-4">
+		<div class="flex flex-col gap-4">
 			{#each game.drawn_letters as letter, index}
 				<div
 					class="
 					{index == 0
 						? ''
 						: index == 1
-							? 'opacity-50'
+							? 'opacity-40'
 							: index == 2
-								? 'opacity-40'
+								? 'opacity-30'
 								: index == 3
-									? 'opacity-30'
-									: index == 4
-										? 'opacity-20'
-										: ''}
+									? 'opacity-20'
+									: ''}
 					"
 				>
 					<Letter {letter} bordered={true} />
 				</div>
 			{/each}
 		</div>
+
+		<Letter letter="→" />
 
 		<div
 			class="
