@@ -3,7 +3,7 @@
 	import WordleWordList from '$lib/content/wordle_all.txt?raw';
 	import Letter from './Letter.svelte';
 
-	let game = new Game(WordleWordList.split('\n'), 4, 40);
+	let game = new Game(WordleWordList.split('\n'), 2, 40);
 </script>
 
 <div class="grid bg-white">
