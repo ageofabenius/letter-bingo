@@ -1,5 +1,5 @@
 import { WordList } from "./dictionary.svelte";
-import { LetterRandomizer as LetterBag } from "./letter_bag.svelte";
+import { type LetterSequencer, Sequence } from "./letter_bag.svelte";
 
 export class Game {
 
@@ -11,10 +11,9 @@ export class Game {
         [null, null, null, null, null]
     ]);
 
-    current_letter: string = $state('');
-    next_letter: string = $state('');
+    drawn_letters: string[] = $state([]);
 
-    letter_bag: LetterBag
+    letter_bag: LetterSequencer
     dictionary: WordList
 
     winning_row: number | null = $state(null)
@@ -22,18 +21,20 @@ export class Game {
 
     game_lost: boolean = $state(false)
 
-    constructor(word_list: string[]) {
+    constructor(word_list: string[], num_letters_drawn: number) {
         this.dictionary = new WordList(word_list)
 
-        this.letter_bag = new LetterBag()
-        this.advance_letter()
-        this.advance_letter()
+        this.letter_bag = new Sequence(25)
+
+        for (let i = 0; i < num_letters_drawn; i++)
+        {
+            this.draw_letter()
+        }
     }
 
-    advance_letter() {
-        console.log('advance_letter')
-        this.current_letter = this.next_letter
-        this.next_letter = this.letter_bag.get_next_letter()
+    draw_letter() {
+        console.log('draw')
+        this.drawn_letters.push(this.letter_bag.get_next_letter())
     }
 
     cell_clicked(row_index: number, col_index: number) {
@@ -48,8 +49,7 @@ export class Game {
         }
 
         // Place letter
-        this.grid[row_index][col_index] = this.current_letter;
-        this.current_letter = ''
+        this.grid[row_index][col_index] = this.drawn_letters.shift()!;
 
         // Check win condition
         const row_word = this.row_word(row_index)
@@ -79,7 +79,7 @@ export class Game {
         }
 
         // Move to next letter
-        this.advance_letter()
+        this.draw_letter()
     }
 
     /**

@@ -3,28 +3,41 @@
 	import WordleWordList from '$lib/content/wordle_all.txt?raw';
 	import Letter from './Letter.svelte';
 
-	let game = new Game(WordleWordList.split('\n'));
+	let game = new Game(WordleWordList.split('\n'), 2);
 </script>
 
 <div class="grid bg-white">
-	<div class="flex flex-col gap-4 p-4">
-		<div class="flex gap-4">
-			<div class="opacity-30">
-				<Letter letter={game.next_letter} bordered={true} />
-			</div>
-			<div>
-				<Letter letter={game.current_letter} bordered={true} />
-			</div>
+	<div class="flex flex-col items-start gap-4 p-4">
+		<div class="flex flex-row-reverse gap-4">
+			{#each game.drawn_letters as letter, index}
+				<div
+					class="
+					{index == 0
+						? ''
+						: index == 1
+							? 'opacity-50'
+							: index == 2
+								? 'opacity-40'
+								: index == 3
+									? 'opacity-30'
+									: index == 4
+										? 'opacity-20'
+										: ''}
+					"
+				>
+					<Letter {letter} bordered={true} />
+				</div>
+			{/each}
 		</div>
 
 		<div
 			class="
 			grid aspect-square
-			grid-cols-5 grid-rows-5
-			gap-0.5
-		bg-gray-200
+			size-fit grid-cols-5
+			grid-rows-5
+		gap-0.5
+			bg-gray-200
 			p-0.5
-			size-fit
 			"
 		>
 			{#each game.grid as row, row_index}
@@ -50,16 +63,18 @@
 		</div>
 	</div>
 
-	<div class="flex flex-col gap-4 p-4">
+	<div class="flex flex-wrap gap-8 p-4">
 		{#key game.letter_bag.bag}
 			{#each Object.entries(game.letter_bag.bag) as [letter, count]}
-				<div class="flex flex-wrap gap-2">
-					{#each { length: count }}
-						<div>
-							<Letter {letter} bordered={true} />
-						</div>
-					{/each}
-				</div>
+				{#if count > 0}
+					<div class="flex flex-wrap gap-2">
+						{#each { length: count }}
+							<div>
+								<Letter {letter} bordered={true} />
+							</div>
+						{/each}
+					</div>
+				{/if}
 			{/each}
 		{/key}
 	</div>
