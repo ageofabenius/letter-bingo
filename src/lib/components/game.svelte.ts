@@ -21,10 +21,11 @@ export class Game {
 
     game_lost: boolean = $state(false)
 
-    constructor(word_list: string[], num_letters_drawn: number) {
+    constructor(word_list: string[], num_letters_drawn: number, sequence_length: number) {
+        console.log(`game initializing`)
         this.dictionary = new WordList(word_list)
 
-        this.letter_bag = new Sequence(25)
+        this.letter_bag = new Sequence(sequence_length)
 
         for (let i = 0; i < num_letters_drawn; i++)
         {
