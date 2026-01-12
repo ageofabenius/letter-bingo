@@ -9,9 +9,9 @@
 	} = $props();
 </script>
 
-<div class="grid bg-white">
-	<div class="flex p-4">
-		<div class="flex flex-col gap-4">
+<div>
+	<div class="flex flex-col p-4 sm:flex-row">
+		<div class="flex flex-row justify-start gap-4 sm:flex-col">
 			{#each game.drawn_letters as letter, index}
 				<div
 					class="
@@ -26,12 +26,25 @@
 									: ''}
 					"
 				>
-					<Letter {letter} bordered={true} />
+					<Letter {letter} standalone={true} />
 				</div>
 			{/each}
 		</div>
 
-		<Letter letter="→" />
+		<div
+			class="ext-md flex aspect-square size-12
+			rotate-90
+			items-center
+			justify-center
+			sm:size-20
+			sm:rotate-0
+			sm:text-2xl
+			lg:size-24
+			lg:text-3xl
+			"
+		>
+			→
+		</div>
 
 		<div
 			class="
@@ -66,14 +79,14 @@
 		</div>
 	</div>
 
-	<div class="flex flex-wrap gap-8 p-4">
+	<div class="flex flex-wrap gap-x-4 gap-y-2 p-4 sm:gap-x-8 sm:gap-y-3 md:gap-x-12 md:gap-y-4">
 		{#key game.letter_bag.bag}
-			{#each Object.entries(game.letter_bag.bag) as [letter, count]}
+			{#each Object.entries(game.letter_bag.bag) as [letter, count], index}
 				{#if count > 0}
-					<div class="flex flex-wrap gap-2">
+					<div class="flex flex-wrap gap-1 sm:gap-2 md:gap-3">
 						{#each { length: count }}
 							<div>
-								<Letter {letter} bordered={true} />
+								<Letter {letter} standalone={true} />
 							</div>
 						{/each}
 					</div>

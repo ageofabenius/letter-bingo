@@ -1,10 +1,10 @@
 <script lang="ts">
 	let {
 		letter,
-		bordered
+		standalone
 	}: {
 		letter: string | null;
-		bordered?: boolean;
+		standalone?: boolean;
 	} = $props();
 </script>
 
@@ -14,13 +14,14 @@
     aspect-square
 	items-center
     justify-center
-    {bordered ? 'border' : ''}
-    size-12
+    {standalone ? 'rounded-xs border-2 border-stone-200 shadow sm:rounded-sm md:rounded' : ''}
+    text-md
+	size-12
 	sm:size-20
-	lg:size-24
-	text-md
 	sm:text-2xl
+	lg:size-24
 	lg:text-3xl
+	{letter === null ? '' : 'bg-stone-100'}
     "
 >
 	{letter}
