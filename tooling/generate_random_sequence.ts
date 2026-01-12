@@ -1,62 +1,91 @@
-import { writeFileSync } from 'fs';
+import {
+	RemainingLetterCount,
+	SCRABBLE_LETTER_DISTRIBUTION
+} from '../src/lib/components/letter_bag.svelte.ts';
 
-export class LetterRandomizer {
-    initial_letter_distribution: LetterBag = {
-        A: 9,
-        B: 2,
-        C: 2,
-        D: 4,
-        E: 12,
-        F: 2,
-        G: 3,
-        H: 2,
-        I: 9,
-        J: 1,
-        K: 1,
-        L: 4,
-        M: 2,
-        N: 6,
-        O: 8,
-        P: 2,
-        Q: 1,
-        R: 6,
-        S: 4,
-        T: 6,
-        U: 4,
-        V: 2,
-        W: 2,
-        X: 1,
-        Y: 2,
-        Z: 1,
-    }
+let NUM_SEQUENCES = Number(process.argv[2]);
 
-    bag: LetterBag
+/**
+ * Sequence included here for use without $state Svelte runes
+ */
+export class Sequence {
+	/**
+	 * An alternative to LetterRandomizer.  Sequence determines its sequence at
+	 * initialization time, taking a sequence length (25 min to fill board).
+	 * The resulting sequence is then exposed as this.bag, allowing for
+	 * fine-tuning the number of additional tiles displayed.
+	 */
 
-    // random_seed = 1234
+	bag: RemainingLetterCount;
 
-    constructor() {
-        this.bag = { ...this.initial_letter_distribution }
-    }
+	// random_seed = 1234
 
-    get_next_letter(): string {
-        const bag_flattened = Object.entries(this.bag).flatMap(([letter, count]) => Array(count).fill(letter));
-        const letter = bag_flattened[Math.floor(Math.random() * bag_flattened.length)]
-        this.bag[letter] = this.bag[letter] - 1
-        return letter
-    }
+	sequence: string[] = [];
+
+	constructor(initial_bag: RemainingLetterCount, sequence_length: number) {
+		this.sequence = this.generate_sequence(initial_bag, sequence_length);
+		this.bag = this.bag_from_sequence(this.sequence);
+	}
+
+	generate_sequence(initial_bag: RemainingLetterCount, sequence_length: number): string[] {
+		const bag_flattened = Object.entries(initial_bag).flatMap(([letter, count]) =>
+			Array(count).fill(letter)
+		);
+		const sequence: string[] = [];
+		for (let i = 0; i < sequence_length; i++) {
+			const random_index = Math.floor(Math.random() * bag_flattened.length);
+			const letter = bag_flattened.splice(random_index, 1)[0];
+			sequence.push(letter);
+		}
+		return sequence;
+	}
+
+	bag_from_sequence(sequence: string[]): RemainingLetterCount {
+		const bag = {
+			A: 0,
+			B: 0,
+			C: 0,
+			D: 0,
+			E: 0,
+			F: 0,
+			G: 0,
+			H: 0,
+			I: 0,
+			J: 0,
+			K: 0,
+			L: 0,
+			M: 0,
+			N: 0,
+			O: 0,
+			P: 0,
+			Q: 0,
+			R: 0,
+			S: 0,
+			T: 0,
+			U: 0,
+			V: 0,
+			W: 0,
+			X: 0,
+			Y: 0,
+			Z: 0
+		};
+		for (let letter of sequence) {
+			// @ts-expect-error
+			bag[letter] = (bag[letter] ?? 0) + 1;
+		}
+		return bag;
+	}
+
+	get_next_letter(): string {
+		const letter = this.sequence.shift()!;
+
+		this.bag[letter] -= 1;
+		return letter;
+	}
 }
 
-export type LetterBag = Record<string, number>
-
-let SEQUENCES = Number(process.argv[2]);
-
-for (let s = 0; s < SEQUENCES; s++) {
-
-    let randomizer = new LetterRandomizer()
-    let sequence = ""
-    for (let i = 0; i < 25; i++) {
-        sequence += randomizer.get_next_letter()
-    }
-
-    writeFileSync(`tooling/sequences/${sequence}.txt`, sequence)
+console.log(`id,sequence`);
+for (let s = 0; s < NUM_SEQUENCES; s++) {
+	let sequence = new Sequence(SCRABBLE_LETTER_DISTRIBUTION, 50);
+	console.log(`${s},${sequence.sequence.join('')}`);
 }
