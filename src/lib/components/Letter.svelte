@@ -14,14 +14,13 @@
     aspect-square
 	items-center
     justify-center
-    {standalone ? 'rounded-xs border-2 border-stone-200 shadow sm:rounded-sm md:rounded' : ''}
+    {standalone ? 'rounded-xs border-2 border-stone-200 shadow sm:rounded-sm md:rounded bg-stone-100' : ''}
     text-md
 	size-12
 	sm:size-20
 	sm:text-2xl
 	lg:size-24
 	lg:text-3xl
-	{letter === null ? '' : 'bg-stone-100'}
     "
 >
 	{letter}

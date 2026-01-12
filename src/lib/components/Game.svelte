@@ -68,7 +68,7 @@
 							? 'bg-red-500/35'
 							: game.winning_row === row_index || game.winning_col === col_index
 								? 'bg-green-500/50'
-								: 'bg-white'}
+								: 'bg-stone-100'}
 						"
 						onclick={() => game.cell_clicked(row_index, col_index)}
 					>
