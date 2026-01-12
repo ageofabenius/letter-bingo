@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { Game } from './game.svelte';
-	import WordleWordList from '$lib/content/wordle_all.txt?raw';
 	import Letter from './Letter.svelte';
 
-	let game = new Game(WordleWordList.split('\n'), 2, 40);
+	let {
+		game
+	}: {
+		game: Game;
+	} = $props();
 </script>
 
 <div class="grid bg-white">

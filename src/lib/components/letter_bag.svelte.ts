@@ -7,41 +7,12 @@ export interface LetterSequencer {
 export type RemainingLetterCount = Record<string, number>
 
 export class ScrabbleBag implements LetterSequencer {
-    initial_letter_distribution: RemainingLetterCount = {
-        A: 9,
-        B: 2,
-        C: 2,
-        D: 4,
-        E: 12,
-        F: 2,
-        G: 3,
-        H: 2,
-        I: 9,
-        J: 1,
-        K: 1,
-        L: 4,
-        M: 2,
-        N: 6,
-        O: 8,
-        P: 2,
-        Q: 1,
-        R: 6,
-        S: 4,
-        T: 6,
-        U: 4,
-        V: 2,
-        W: 2,
-        X: 1,
-        Y: 2,
-        Z: 1,
-    }
-
     bag: RemainingLetterCount
 
     // random_seed = 1234
 
-    constructor() {
-        this.bag = $state({ ...this.initial_letter_distribution })
+    constructor(initial_bag: RemainingLetterCount) {
+        this.bag = $state({ ...initial_bag })
         console.log('initialized letter bag', this.bag)
     }
 
@@ -53,8 +24,8 @@ export class ScrabbleBag implements LetterSequencer {
     }
 }
 
-
-const SCRABBLE_LETTER_DISTRIBUTION: RemainingLetterCount = {
+// 98 total
+export const SCRABBLE_LETTER_DISTRIBUTION: RemainingLetterCount = {
     A: 9,
     B: 2,
     C: 2,
@@ -83,7 +54,8 @@ const SCRABBLE_LETTER_DISTRIBUTION: RemainingLetterCount = {
     Z: 1,
 }
 
-const HALFISH_SCRABBLE_LETTER_DISTRIBUTION: RemainingLetterCount = {
+// 50 total
+export const HALFISH_SCRABBLE_LETTER_DISTRIBUTION: RemainingLetterCount = {
     A: 4,
     B: 1,
     C: 1,
@@ -127,16 +99,13 @@ export class Sequence implements LetterSequencer {
 
     sequence: string[] = []
 
-    constructor(sequence_length: number) {
-        this.sequence = this.generate_sequence(sequence_length)
+    constructor(initial_bag: RemainingLetterCount, sequence_length: number) {
+        this.sequence = this.generate_sequence(initial_bag, sequence_length)
         this.bag = $state(this.bag_from_sequence(this.sequence))
-        console.log('initialized letter bag', this.bag)
-
-        // console.log('number letters', Object.values(HALFISH_SCRABBLE_LETTER_DISTRIBUTION).reduce((acc, cur) => acc += cur, 0))
     }
 
-    generate_sequence(sequence_length: number): string[] {
-        const bag_flattened = Object.entries(HALFISH_SCRABBLE_LETTER_DISTRIBUTION).flatMap(([letter, count]) => Array(count).fill(letter));
+    generate_sequence(initial_bag: RemainingLetterCount, sequence_length: number): string[] {
+        const bag_flattened = Object.entries(initial_bag).flatMap(([letter, count]) => Array(count).fill(letter));
         const sequence: string[] = []
         for (let i = 0; i < sequence_length; i++) {
             const random_index = Math.floor(Math.random() * bag_flattened.length)

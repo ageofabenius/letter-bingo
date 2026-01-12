@@ -1,5 +1,5 @@
 import { WordList } from "./dictionary.svelte";
-import { type LetterSequencer, Sequence } from "./letter_bag.svelte";
+import { type LetterSequencer, type RemainingLetterCount, Sequence } from "./letter_bag.svelte";
 
 export class Game {
 
@@ -21,11 +21,11 @@ export class Game {
 
     game_lost: boolean = $state(false)
 
-    constructor(word_list: string[], num_letters_drawn: number, sequence_length: number) {
+    constructor(word_list: string[], num_letters_drawn: number, sequence_length: number, initial_bag: RemainingLetterCount) {
         console.log(`game initializing`)
         this.dictionary = new WordList(word_list)
 
-        this.letter_bag = new Sequence(sequence_length)
+        this.letter_bag = new Sequence(initial_bag, sequence_length)
 
         for (let i = 0; i < num_letters_drawn; i++)
         {
